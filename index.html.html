@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmarking Study Prompt Builder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #fafaf8;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .header {
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+  .eyebrow {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: #666;
+    font-style: italic;
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid #e0ddd8;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .field {
+    margin-bottom: 1.25rem;
+  }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .hint {
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+  input[type="text"],
+  textarea,
+  select {
+    width: 100%;
+    border: 1px solid #d0cdc8;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: 'Georgia', serif;
+    color: #1a1a1a;
+    background: #fafaf8;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #1a1a1a;
+  }
+  textarea {
+    resize: vertical;
+    line-height: 1.6;
+    min-height: 80px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 540px) {
+    .row { grid-template-columns: 1fr; }
+  }
+  .btn-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+  }
+  button {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Georgia', serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: #1a1a1a; color: #fff; }
+  .btn-primary:hover { background: #333; }
+  .btn-secondary {
+    background: #fff;
+    color: #1a1a1a;
+    border: 1px solid #d0cdc8;
+  }
+  .btn-secondary:hover { background: #f0ede8; }
+  .output {
+    background: #1a1a1a;
+    color: #f5f3ee;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.25rem;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+  }
+  .output.visible { display: block; }
+  .copy-success {
+    color: #6ee7a3;
+    font-weight: 700;
+  }
+  .help {
+    background: #f5f3ee;
+    border-left: 3px solid #1a1a1a;
+    padding: 1rem 1.25rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.7;
+  }
+  .help strong { color: #1a1a1a; }
+  .help ol { margin-left: 1.25rem; margin-top: 6px; }
+  .examples {
+    margin-top: 6px;
+    padding: 0;
+  }
+  .example-chip {
+    display: inline-block;
+    background: #f5f3ee;
+    border: 1px solid #e0ddd8;
+    border-radius: 20px;
+    padding: 4px 12px;
+    margin: 4px 4px 0 0;
+    font-size: 12px;
+    cursor: pointer;
+    color: #555;
+    font-family: 'Georgia', serif;
+  }
+  .example-chip:hover {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="eyebrow">Transfer Pricing · Phase 1</div>
+      <h1>Benchmarking Study Prompt Builder</h1>
+      <p class="subtitle">Fill in the form, copy the prompt, paste it into Claude. Get an Excel deliverable back.</p>
+    </div>
+
+    <div class="help">
+      <strong>How to use:</strong>
+      <ol>
+        <li>Fill in the form below — the more specific your business activity, the better the comparables.</li>
+        <li>Click <strong>Generate prompt</strong>.</li>
+        <li>Click <strong>Copy</strong> and paste into a new Claude chat.</li>
+        <li>Wait for the Excel file to be delivered.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="activity">Subject Business Activity</label>
+        <div class="hint">Be specific — describe products, services, and customer type. The more detail, the sharper the comparables.</div>
+        <textarea id="activity" rows="3" placeholder="e.g. Wholesale supplier of construction materials and hardware tools — cement, steel bars, roofing, power tools, hand tools — to contractors and developers"></textarea>
+        <div class="examples">
+          <span class="example-chip" onclick="setActivity('Construction materials and hardware tools')">Construction materials & hardware</span>
+          <span class="example-chip" onclick="setActivity('IT managed services and cloud infrastructure for SMEs')">IT managed services</span>
+          <span class="example-chip" onclick="setActivity('Wholesale FMCG distribution — packaged food and household consumables')">FMCG wholesale</span>
+          <span class="example-chip" onclick="setActivity('Engineering, procurement and construction (EPC) for oil and gas projects')">EPC oil & gas</span>
+          <span class="example-chip" onclick="setActivity('Manufacturing of plastic packaging products')">Plastic packaging</span>
+          <span class="example-chip" onclick="setActivity('Logistics and freight forwarding services')">Logistics & freight</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="market">Market / Jurisdiction</label>
+          <select id="market">
+            <option value="Malaysia">Malaysia</option>
+            <option value="Singapore">Singapore</option>
+            <option value="Malaysia + Singapore">Malaysia + Singapore</option>
+            <option value="Southeast Asia">Southeast Asia</option>
+            <option value="Asia-Pacific">Asia-Pacific</option>
+            <option value="Global">Global</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="count">Number of Comparables</label>
+          <select id="count">
+            <option value="10">10 companies</option>
+            <option value="20">20 companies</option>
+            <option value="50">50 companies</option>
+            <option value="100" selected>100 companies</option>
+            <option value="150">150 companies</option>
+            <option value="200">200 companies (split delivery)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="source">Source Priority</label>
+          <select id="source">
+            <option value="CTOS + SSM + Bursa first, then web">CTOS + SSM + Bursa first, then web (default)</option>
+            <option value="Bursa Malaysia listed only">Bursa Malaysia listed only</option>
+            <option value="SSM-registered Sdn Bhd only">SSM-registered Sdn Bhd only</option>
+            <option value="Open web search">Open web (any public source)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="size">Company Size Band</label>
+          <select id="size">
+            <option value="Any size">Any size</option>
+            <option value="SME-scale only">SME-scale only</option>
+            <option value="Mid-to-large enterprise">Mid-to-large enterprise</option>
+            <option value="Listed companies only">Listed companies only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="customer">Customer Type Filter (optional)</label>
+        <select id="customer">
+          <option value="Any">Any (B2B and B2C)</option>
+          <option value="B2B wholesale only">B2B wholesale only</option>
+          <option value="B2C retail only">B2C retail only</option>
+          <option value="B2B + project-based">B2B + project-based</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="extra">Additional Notes (optional)</label>
+        <div class="hint">Anything else Claude should know — exclusion criteria, specific subsegments, etc.</div>
+        <textarea id="extra" rows="2" placeholder="e.g. Exclude pure manufacturers; focus only on traders/distributors"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="generatePrompt()">Generate prompt →</button>
+        <button class="btn-secondary" onclick="resetForm()">Reset</button>
+      </div>
+    </div>
+
+    <div class="output" id="output"></div>
+
+    <div class="btn-row" id="copyRow" style="display: none; justify-content: center;">
+      <button class="btn-primary" onclick="copyPrompt()" id="copyBtn">Copy prompt to clipboard</button>
+    </div>
+
+    <div class="footer">
+      Tip: Bookmark this page for quick access next time you start a new study.
+    </div>
+  </div>
+
+<script>
+  function setActivity(text) {
+    document.getElementById('activity').value = text;
+    document.getElementById('activity').focus();
+  }
+
+  function generatePrompt() {
+    const activity = document.getElementById('activity').value.trim();
+    if (!activity) {
+      alert('Please describe your subject business activity first.');
+      document.getElementById('activity').focus();
+      return;
+    }
+
+    const market = document.getElementById('market').value;
+    const count = document.getElementById('count').value;
+    const source = document.getElementById('source').value;
+    const size = document.getElementById('size').value;
+    const customer = document.getElementById('customer').value;
+    const extra = document.getElementById('extra').value.trim();
+
+    let prompt = `Run a Benchmarking Study Phase 1.\n\n`;
+    prompt += `• Subject business activity: ${activity}\n`;
+    prompt += `• Market / jurisdiction: ${market}\n`;
+    prompt += `• Number of comparables: ${count}\n`;
+    prompt += `• Source priority: ${source}\n`;
+
+    if (size !== 'Any size') {
+      prompt += `• Size band: ${size}\n`;
+    }
+    if (customer !== 'Any') {
+      prompt += `• Customer type filter: ${customer}\n`;
+    }
+    if (extra) {
+      prompt += `• Additional notes: ${extra}\n`;
+    }
+
+    prompt += `\nFor each company, provide: legal name, registration number, principal activities (with source), services/products, customers, geography, comparability score (0–100), tier (High/Partial/Low), rationale, and key differences vs. the subject.\n\n`;
+    prompt += `Deliver the result as an Excel (.xlsx) file with a Cover sheet, full Comparables sheet, and Tier Summary sheet.`;
+
+    const out = document.getElementById('output');
+    out.textContent = prompt;
+    out.classList.add('visible');
+
+    document.getElementById('copyRow').style.display = 'flex';
+
+    out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('output').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.innerHTML = '<span class="copy-success">✓ Copied — paste into Claude</span>';
+      setTimeout(() => { btn.textContent = original; }, 2500);
+    }).catch(() => {
+      alert('Could not copy automatically. Please select and copy the text manually.');
+    });
+  }
+
+  function resetForm() {
+    document.getElementById('activity').value = '';
+    document.getElementById('market').value = 'Malaysia';
+    document.getElementById('count').value = '100';
+    document.getElementById('source').value = 'CTOS + SSM + Bursa first, then web';
+    document.getElementById('size').value = 'Any size';
+    document.getElementById('customer').value = 'Any';
+    document.getElementById('extra').value = '';
+    document.getElementById('output').classList.remove('visible');
+    document.getElementById('copyRow').style.display = 'none';
+  }
+</script>
+</body>
+</html>
